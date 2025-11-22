@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Affen Quiz</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Hintergrund-Overlay für moderne „blobs“ -->
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+
+    <div id="app">
+      <!-- Start-Screen -->
+      <section id="screen-start" class="screen active">
+        <div class="card main-card tilt-card">
+          <div class="logo-row">
+            <div class="monkey-logo">🐵</div>
+            <div>
+              <h1>Affen Quiz</h1>
+              <p class="subtitle">
+                Invite deine Freunde & spielt live gegeneinander.
+              </p>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label>Dein Name</label>
+            <input id="nickname-input" type="text" placeholder="Affenkönig" />
+          </div>
+
+          <div class="button-row">
+            <button id="btn-create-room" class="btn primary glow">
+              🐵 Lobby erstellen
+            </button>
+          </div>
+
+          <div class="divider">
+            <span>oder Lobby beitreten</span>
+          </div>
+
+          <div class="join-row">
+            <input
+              id="room-code-input"
+              type="text"
+              placeholder="RAUMCODE"
+              maxlength="5"
+            />
+            <button id="btn-join-room" class="btn secondary glow">
+              Beitreten
+            </button>
+          </div>
+
+          <p id="start-error" class="error-text"></p>
+        </div>
+      </section>
+
+      <!-- Lobby-Screen -->
+      <section id="screen-lobby" class="screen">
+        <div class="card main-card tilt-card">
+          <h2>Lobby: <span id="lobby-code">XXXXX</span></h2>
+          <p class="hint">
+            Schick deinen Freunden den Code oder den Link, damit sie joinen
+            können.
+          </p>
+
+          <div class="players-list-container">
+            <h3>Spieler</h3>
+            <ul id="players-list" class="players-list"></ul>
+          </div>
+
+          <div id="host-info" class="host-info"></div>
+
+          <div class="button-row lobby-buttons">
+            <button id="btn-back-to-start" class="btn ghost">Zurück</button>
+            <button id="btn-start-game" class="btn primary glow hidden">
+              🚀 Spiel starten
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quiz-Screen -->
+      <section id="screen-quiz" class="screen">
+        <div class="card quiz-card tilt-card">
+          <div class="quiz-header">
+            <div class="chip category-chip" id="quiz-category">Kategorie</div>
+            <div class="chip question-chip">
+              Frage <span id="quiz-progress">1/1</span>
+            </div>
+          </div>
+
+          <h2 id="quiz-question" class="quiz-question-text">
+            Frage kommt hier hin
+          </h2>
+
+          <div id="quiz-options" class="options-grid"></div>
+
+          <!-- Hier wird gezeigt, wer welche Antwort geklickt hat -->
+          <div id="answer-summary" class="answer-summary hidden"></div>
+
+          <div class="quiz-footer">
+            <div id="quiz-status" class="quiz-status"></div>
+            <button id="btn-next-question" class="btn primary glow hidden">
+              Nächste Frage ➜
+            </button>
+          </div>
+        </div>
+
+        <div class="card side-card tilt-card">
+          <h3>Scoreboard</h3>
+          <ul id="scoreboard-list" class="scoreboard-list"></ul>
+        </div>
+      </section>
+
+      <!-- Game Over Screen -->
+      <section id="screen-game-over" class="screen">
+        <div class="card main-card tilt-card">
+          <h2>🎉 Spiel vorbei!</h2>
+          <p class="subtitle">Endstand im Affen-Dschungel:</p>
+
+          <ul id="final-scoreboard" class="scoreboard-list final"></ul>
+
+          <div class="button-row">
+            <button id="btn-back-to-lobby" class="btn secondary glow">
+              Zurück zur Lobby
+            </button>
+            <button id="btn-new-game" class="btn primary glow">
+              Neue Runde starten
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
