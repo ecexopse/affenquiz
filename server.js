@@ -200,6 +200,9 @@ io.on("connection", (socket) => {
       correct: isCorrect
     });
 
+    // für Spieler-Leiste: jemand hat geantwortet
+    io.to(roomCode).emit("playerAnswered", { playerId: socket.id });
+
     // Score Update an alle
     io.to(roomCode).emit("scoreUpdate", getRoomPublicState(roomCode));
 

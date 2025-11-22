@@ -84,34 +84,44 @@
 
       <!-- Quiz-Screen -->
       <section id="screen-quiz" class="screen">
-        <div class="card quiz-card tilt-card">
-          <div class="quiz-header">
-            <div class="chip category-chip" id="quiz-category">Kategorie</div>
-            <div class="chip question-chip">
-              Frage <span id="quiz-progress">1/1</span>
+        <div class="quiz-top-row">
+          <div class="card quiz-card tilt-card">
+            <div class="quiz-header">
+              <div class="chip category-chip" id="quiz-category">Kategorie</div>
+              <div class="chip question-chip">
+                Frage <span id="quiz-progress">1/1</span>
+              </div>
+            </div>
+
+            <h2 id="quiz-question" class="quiz-question-text">
+              Frage kommt hier hin
+            </h2>
+
+            <div id="quiz-options" class="options-grid"></div>
+
+            <!-- Hier wird gezeigt, wer welche Antwort geklickt hat -->
+            <div id="answer-summary" class="answer-summary hidden"></div>
+
+            <div class="quiz-footer">
+              <div id="quiz-status" class="quiz-status"></div>
+              <button id="btn-next-question" class="btn primary glow hidden">
+                Nächste Frage ➜
+              </button>
             </div>
           </div>
 
-          <h2 id="quiz-question" class="quiz-question-text">
-            Frage kommt hier hin
-          </h2>
-
-          <div id="quiz-options" class="options-grid"></div>
-
-          <!-- Hier wird gezeigt, wer welche Antwort geklickt hat -->
-          <div id="answer-summary" class="answer-summary hidden"></div>
-
-          <div class="quiz-footer">
-            <div id="quiz-status" class="quiz-status"></div>
-            <button id="btn-next-question" class="btn primary glow hidden">
-              Nächste Frage ➜
-            </button>
+          <div class="card side-card tilt-card">
+            <h3>Scoreboard</h3>
+            <ul id="scoreboard-list" class="scoreboard-list"></ul>
           </div>
         </div>
 
-        <div class="card side-card tilt-card">
-          <h3>Scoreboard</h3>
-          <ul id="scoreboard-list" class="scoreboard-list"></ul>
+        <!-- Spieler-Leiste unten (wie in den Referenzbildern) -->
+        <div class="card players-strip tilt-card">
+          <div class="players-strip-header">
+            <span class="players-strip-title">Spielerübersicht</span>
+          </div>
+          <div id="players-strip-inner" class="players-strip-inner"></div>
         </div>
       </section>
 

@@ -5,6 +5,8 @@ let currentRoomCode = null;
 let isHost = false;
 let hasAnsweredCurrent = false;
 let lastOptionCards = [];
+let currentPlayers = [];
+let playerStates = {}; // pro Spieler: { answered: bool, correct: true/false/null }
 
 // DOM Helper
 const $ = (id) => document.getElementById(id);
@@ -53,6 +55,9 @@ const quizOptionsEl = $("quiz-options");
 const quizStatusEl = $("quiz-status");
 const answerSummaryEl = $("answer-summary");
 const scoreboardListEl = $("scoreboard-list");
+
+// Spielerleiste unten
+const playersStripInnerEl = $("players-strip-inner");
 
 // Game Over
 const finalScoreboardEl = $("final-scoreboard");
@@ -145,8 +150,11 @@ roomCodeInput.addEventListener("keyup", (e) => {
 // Raum-Update (Spielerliste + Scores)
 socket.on("roomUpdate", (state) => {
   if (!state) return;
+  currentPlayers = state.players || [];
+  ensurePlayerStateForCurrentPlayers();
   renderPlayersList(state.players, state.hostId);
   renderScoreboard(state.players);
+  renderPlayerStrip(state.players);
   isHost = state.hostId === socket.id;
   updateLobbyHostUI();
 });
@@ -157,6 +165,7 @@ socket.on("gameStarted", () => {
   quizStatusEl.textContent = "";
   btnNextQuestion.classList.add("hidden");
   btnNextQuestion.disabled = true;
+  resetPlayerStatesForNewQuestion();
   showScreen("quiz");
 });
 
@@ -173,6 +182,8 @@ socket.on("newQuestion", (payload) => {
     answerSummaryEl.innerHTML = "";
   }
 
+  resetPlayerStatesForNewQuestion();
+
   quizCategoryEl.textContent = payload.category;
   quizProgressEl.textContent = `${payload.index}/${payload.total}`;
   quizQuestionEl.textContent = payload.question;
@@ -182,7 +193,19 @@ socket.on("newQuestion", (payload) => {
 // Score-Update
 socket.on("scoreUpdate", (state) => {
   if (!state) return;
+  currentPlayers = state.players || [];
   renderScoreboard(state.players);
+  renderPlayerStrip(state.players);
+});
+
+// Info: ein Spieler hat seine Antwort abgegeben (für Status „Lock-in“)
+socket.on("playerAnswered", ({ playerId }) => {
+  if (!playerStates[playerId]) {
+    playerStates[playerId] = { answered: true, correct: null };
+  } else {
+    playerStates[playerId].answered = true;
+  }
+  renderPlayerStrip(currentPlayers);
 });
 
 // Antworten aufdecken (ROT/GRÜN + wer was geantwortet hat)
@@ -198,8 +221,15 @@ socket.on("answerReveal", (payload) => {
     }
   });
 
-  // Falsche Antworten markieren
+  // Falsche Antworten markieren + Spielerstatus aktualisieren
   answers.forEach((a) => {
+    if (!playerStates[a.playerId]) {
+      playerStates[a.playerId] = { answered: true, correct: a.correct };
+    } else {
+      playerStates[a.playerId].answered = true;
+      playerStates[a.playerId].correct = a.correct;
+    }
+
     if (!a.correct) {
       const card = lastOptionCards[a.answerIndex];
       if (card) {
@@ -207,6 +237,8 @@ socket.on("answerReveal", (payload) => {
       }
     }
   });
+
+  renderPlayerStrip(currentPlayers);
 
   quizStatusEl.textContent =
     "Auswertung: Grün = richtig, Rot = falsch. Unten siehst du, wer was gewählt hat.";
@@ -296,7 +328,7 @@ function renderOptions(options) {
 
     const letter = document.createElement("div");
     letter.className = "option-letter";
-    letter.textContent = letters[index] || "?";
+    letter.textContent = letters[index] || "?"
 
     const text = document.createElement("div");
     text.className = "option-text";
@@ -317,7 +349,8 @@ function renderOptions(options) {
         answerIndex: index
       });
 
-      quizStatusEl.textContent = "Antwort gesendet! Warte, bis alle geantwortet haben …";
+      quizStatusEl.textContent =
+        "Antwort gesendet! Warte, bis alle geantwortet haben …";
     });
 
     quizOptionsEl.appendChild(card);
@@ -404,6 +437,96 @@ function updateLobbyHostUI() {
 function updateLobbyLinkHint() {
   if (!currentRoomCode) return;
   // könnte erweitert werden (z.B. Anzeige eines Links)
+}
+
+/* Spielerleiste unten */
+
+function ensurePlayerStateForCurrentPlayers() {
+  currentPlayers.forEach((p) => {
+    if (!playerStates[p.id]) {
+      playerStates[p.id] = { answered: false, correct: null };
+    }
+  });
+}
+
+function resetPlayerStatesForNewQuestion() {
+  currentPlayers.forEach((p) => {
+    playerStates[p.id] = { answered: false, correct: null };
+  });
+  renderPlayerStrip(currentPlayers);
+}
+
+function renderPlayerStrip(players) {
+  if (!playersStripInnerEl) return;
+
+  playersStripInnerEl.innerHTML = "";
+
+  players.forEach((p) => {
+    if (!playerStates[p.id]) {
+      playerStates[p.id] = { answered: false, correct: null };
+    }
+    const state = playerStates[p.id];
+
+    const tile = document.createElement("div");
+    tile.className = "player-tile";
+
+    if (p.id === socket.id) {
+      tile.classList.add("me");
+    }
+
+    if (state.correct === true) {
+      tile.classList.add("correct");
+    } else if (state.correct === false) {
+      tile.classList.add("wrong");
+    } else if (state.answered) {
+      tile.classList.add("answered");
+    } else {
+      tile.classList.add("active");
+    }
+
+    const avatar = document.createElement("div");
+    avatar.className = "player-tile-avatar";
+    if (state.correct === true) {
+      avatar.textContent = "✅";
+    } else if (state.correct === false) {
+      avatar.textContent = "❌";
+    } else {
+      avatar.textContent = "🐵";
+    }
+
+    const main = document.createElement("div");
+    main.className = "player-tile-main";
+
+    const name = document.createElement("div");
+    name.className = "player-tile-name";
+    name.textContent = p.nickname;
+
+    const status = document.createElement("div");
+    status.className = "player-tile-status";
+
+    if (state.correct === true) {
+      status.textContent = "Richtig";
+    } else if (state.correct === false) {
+      status.textContent = "Falsch";
+    } else if (state.answered) {
+      status.textContent = "Lock-in";
+    } else {
+      status.textContent = "Am Zug";
+    }
+
+    main.appendChild(name);
+    main.appendChild(status);
+
+    const score = document.createElement("div");
+    score.className = "player-tile-score";
+    score.textContent = p.score;
+
+    tile.appendChild(avatar);
+    tile.appendChild(main);
+    tile.appendChild(score);
+
+    playersStripInnerEl.appendChild(tile);
+  });
 }
 
 // --- 3D Tilt Effekt für Karten ---
