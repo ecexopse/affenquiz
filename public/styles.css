@@ -508,63 +508,61 @@ input:focus {
   margin-bottom: 18px;
 }
 
-/* Antwort-Karten mit Animation & Hover Glow */
+/* Antwort-Karten */
 .options-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 10px;
 }
 
 .option-card {
   position: relative;
+  background: rgba(14, 14, 20, 0.96);
   border-radius: 18px;
-  padding: 10px 14px;
-  background: linear-gradient(135deg, #14141b, #101014);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  cursor: pointer;
-  font-size: 0.95rem;
+  padding: 10px 12px;
   display: flex;
+  gap: 10px;
   align-items: center;
-  gap: 8px;
+  cursor: pointer;
+  overflow: hidden;
   transition:
     transform var(--transition-fast),
     box-shadow var(--transition-fast),
     border-color var(--transition-fast),
     background var(--transition-fast),
     filter var(--transition-fast);
-  overflow: hidden;
 }
 
 .option-card::before {
   content: "";
   position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at top left, rgba(193, 135, 79, 0.22), transparent 70%);
+  inset: -60%;
+  background: radial-gradient(circle at top left, rgba(193, 135, 79, 0.35), transparent 60%);
   opacity: 0;
   transition: opacity var(--transition-fast);
 }
 
 .option-letter {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.8rem;
-  color: var(--text-muted);
 }
 
 .option-text {
-  position: relative;
-  z-index: 1;
+  flex: 1;
+  font-size: 0.95rem;
 }
 
 .option-card:hover {
-  transform: translateY(-1px) scale(1.02);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.75);
+  transform: translateY(-1px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.75);
   border-color: rgba(193, 135, 79, 0.8);
   filter: brightness(1.02);
 }
@@ -609,7 +607,7 @@ input:focus {
   color: var(--text-muted);
 }
 
-/* Answer Summary: wer hat was gewählt */
+/* Answer Summary */
 .answer-summary {
   margin-top: 8px;
   padding-top: 8px;
@@ -707,6 +705,13 @@ input:focus {
   color: var(--text-muted);
 }
 
+/* kleinerer Button für Kamera */
+.cam-btn {
+  padding: 5px 10px;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
 .players-strip-inner {
   display: flex;
   gap: 10px;
@@ -747,6 +752,21 @@ input:focus {
   align-items: center;
   justify-content: center;
   font-size: 1rem;
+  overflow: hidden; /* wichtig für Video */
+}
+
+/* Wenn Video drin ist, nicht mehr den Farbverlauf zeigen */
+.player-tile-avatar.avatar-with-video {
+  background: #000;
+  padding: 0;
+}
+
+/* Video in Avatar-Kugel */
+.player-tile-avatar video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
 }
 
 .player-tile-main {
@@ -799,27 +819,33 @@ input:focus {
 .player-tile.wrong {
   border-color: #ff6b6b;
   box-shadow: 0 14px 32px rgba(255, 107, 107, 0.4);
-  background: radial-gradient(circle at top, rgba(255, 107, 107, 0.08), #101014);
+  background: radial-gradient(circle at top, rgba(255, 107, 107, 0.15), #101014);
 }
 
 .player-tile.wrong .player-tile-status {
-  color: #ff9a9a;
+  color: #ff6b6b;
 }
 
-/* Utility */
-.hidden {
-  display: none !important;
+/* 3D Tilt Effekt für Karten */
+.tilt-card {
+  transform-style: preserve-3d;
+  transform-origin: center;
+  transition:
+    transform var(--transition-med),
+    box-shadow var(--transition-med),
+    border-color var(--transition-med);
 }
 
-.hint {
-  font-size: 0.85rem;
-  color: var(--text-muted);
+.tilt-card.hovered {
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.85);
+  border-color: var(--accent-soft);
 }
 
-/* Responsiv */
-@media (max-width: 800px) {
+/* Media Queries */
+@media (max-width: 780px) {
   #app {
-    height: auto;
+    height: 100vh;
+    width: 100vw;
   }
 
   .quiz-top-row {
@@ -830,22 +856,11 @@ input:focus {
     margin-right: 0;
   }
 
-  .options-grid {
-    grid-template-columns: 1fr;
-  }
-
-  body {
-    overflow: auto;
+  .side-card {
+    min-width: 0;
   }
 }
 
-/* Bewegungs-Reduktion für Nutzer mit prefers-reduced-motion */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition: none !important;
-  }
+.hidden {
+  display: none !important;
 }

@@ -8,6 +8,9 @@ let lastOptionCards = [];
 let currentPlayers = [];
 let playerStates = {}; // pro Spieler: { answered: bool, correct: true/false/null }
 
+// Webcam-State
+let localCameraStream = null;
+
 // DOM Helper
 const $ = (id) => document.getElementById(id);
 
@@ -41,6 +44,7 @@ const btnStartGame = $("btn-start-game");
 const btnNextQuestion = $("btn-next-question");
 const btnBackToLobby = $("btn-back-to-lobby");
 const btnNewGame = $("btn-new-game");
+const btnToggleCamera = $("btn-toggle-camera");
 
 // Lobby Elements
 const lobbyCodeEl = $("lobby-code");
@@ -62,7 +66,8 @@ const playersStripInnerEl = $("players-strip-inner");
 // Game Over
 const finalScoreboardEl = $("final-scoreboard");
 
-// --- Event Listener ---
+/* ---- Event Listener ---- */
+
 // Lobby erstellen
 btnCreateRoom.addEventListener("click", () => {
   const nickname = nicknameInput.value.trim() || "Affe";
@@ -146,7 +151,41 @@ roomCodeInput.addEventListener("keyup", (e) => {
   }
 });
 
-// --- Socket Events ---
+/* ---- Webcam: manuell per Button ---- */
+
+btnToggleCamera.addEventListener("click", async () => {
+  if (localCameraStream) {
+    // Kamera deaktivieren
+    localCameraStream.getTracks().forEach((t) => t.stop());
+    localCameraStream = null;
+    btnToggleCamera.textContent = "Kamera aktivieren";
+    renderPlayerStrip(currentPlayers);
+    return;
+  }
+
+  // Kamera aktivieren – nur Video, kein Mikrofon
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert("Dein Browser unterstützt keine Kamera-Funktion.");
+    return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: false
+    });
+    localCameraStream = stream;
+    btnToggleCamera.textContent = "Kamera deaktivieren";
+    renderPlayerStrip(currentPlayers);
+  } catch (err) {
+    console.error("Kamera konnte nicht gestartet werden:", err);
+    quizStatusEl.textContent =
+      "Kamera konnte nicht gestartet werden (Berechtigungen prüfen).";
+  }
+});
+
+/* ---- Socket Events ---- */
+
 // Raum-Update (Spielerliste + Scores)
 socket.on("roomUpdate", (state) => {
   if (!state) return;
@@ -258,7 +297,8 @@ socket.on("gameOver", (finalScores) => {
   showScreen("gameOver");
 });
 
-// --- Rendering ---
+/* ---- Rendering ---- */
+
 function renderPlayersList(players, hostId) {
   playersListEl.innerHTML = "";
   players.forEach((p) => {
@@ -328,7 +368,7 @@ function renderOptions(options) {
 
     const letter = document.createElement("div");
     letter.className = "option-letter";
-    letter.textContent = letters[index] || "?"
+    letter.textContent = letters[index] || "?";
 
     const text = document.createElement("div");
     text.className = "option-text";
@@ -341,7 +381,7 @@ function renderOptions(options) {
       if (hasAnsweredCurrent || !currentRoomCode) return;
       hasAnsweredCurrent = true;
 
-      // own selection leicht highlighten (bis Reveal kommt)
+      // eigene Auswahl leicht highlighten (bis Reveal kommt)
       card.classList.add("selected");
 
       socket.emit("submitAnswer", {
@@ -486,12 +526,29 @@ function renderPlayerStrip(players) {
 
     const avatar = document.createElement("div");
     avatar.className = "player-tile-avatar";
+
+    // Standard-Icon abhängig vom Status
+    let defaultEmoji = "🐵";
     if (state.correct === true) {
-      avatar.textContent = "✅";
+      defaultEmoji = "✅";
     } else if (state.correct === false) {
-      avatar.textContent = "❌";
-    } else {
-      avatar.textContent = "🐵";
+      defaultEmoji = "❌";
+    }
+
+    avatar.textContent = defaultEmoji;
+
+    // Falls das unser eigener Spieler ist UND die Kamera aktiv ist:
+    if (p.id === socket.id && localCameraStream) {
+      avatar.textContent = "";
+      avatar.classList.add("avatar-with-video");
+
+      const video = document.createElement("video");
+      video.autoplay = true;
+      video.muted = true; // sicherheitshalber stumm
+      video.playsInline = true;
+      video.srcObject = localCameraStream;
+
+      avatar.appendChild(video);
     }
 
     const main = document.createElement("div");
@@ -529,7 +586,7 @@ function renderPlayerStrip(players) {
   });
 }
 
-// --- 3D Tilt Effekt für Karten ---
+/* --- 3D Tilt Effekt für Karten --- */
 const tiltCards = document.querySelectorAll(".tilt-card");
 
 tiltCards.forEach((card) => {
@@ -539,19 +596,17 @@ tiltCards.forEach((card) => {
     const rect = card.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const rotateX = ((y - centerY) / centerY) * -maxTilt;
+    const rotateY = ((x - centerX) / centerX) * maxTilt;
 
-    const percentX = (x / rect.width) * 2 - 1; // -1 bis 1
-    const percentY = (y / rect.height) * 2 - 1;
-
-    const rotateY = percentX * maxTilt;
-    const rotateX = -percentY * maxTilt;
-
+    card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
     card.classList.add("hovered");
-    card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-2px)`;
   });
 
   card.addEventListener("mouseleave", () => {
-    card.classList.remove("hovered");
     card.style.transform = "";
+    card.classList.remove("hovered");
   });
 });
