@@ -507,36 +507,86 @@ function renderPlayerStrip(players) {
     }
     const state = playerStates[p.id];
 
-    // --- NEUER CAM TILE ---
     const tile = document.createElement("div");
-    tile.className = "player-cam"; // ersetzt player-tile komplett
+    tile.className = "player-tile";
 
-    // Statusfarben wie vorher
-    if (p.id === socket.id) tile.classList.add("me");
-    if (state.correct === true) tile.classList.add("correct");
-    else if (state.correct === false) tile.classList.add("wrong");
-    else if (state.answered) tile.classList.add("answered");
-    else tile.classList.add("active");
-
-    // --- VIDEO BEREICH ---
-    const video = document.createElement("video");
-    video.autoplay = true;
-    video.playsInline = true;
-    video.muted = true;
-
-    // Nur eigene Kamera anzeigen (andere bleiben schwarz)
-    if (p.id === socket.id && localCameraStream) {
-      video.srcObject = localCameraStream;
+    // eigenes Tile markieren
+    if (p.id === socket.id) {
+      tile.classList.add("me");
     }
 
-    // --- NAME ---
+    // Status-Farben
+    if (state.correct === true) {
+      tile.classList.add("correct");
+    } else if (state.correct === false) {
+      tile.classList.add("wrong");
+    } else if (state.answered) {
+      tile.classList.add("answered");
+    } else {
+      tile.classList.add("active");
+    }
+
+    // Avatar / Kamera
+    const avatar = document.createElement("div");
+    avatar.className = "player-tile-avatar";
+
+    // Standard-Emoji je nach Status
+    let defaultEmoji = "🐵";
+    if (state.correct === true) {
+      defaultEmoji = "✅";
+    } else if (state.correct === false) {
+      defaultEmoji = "❌";
+    }
+
+    avatar.textContent = defaultEmoji;
+
+    // Nur BEI DIR: Kamera-Stream einblenden
+    if (p.id === socket.id && localCameraStream) {
+      avatar.textContent = "";
+      avatar.classList.add("avatar-with-video");
+
+      const video = document.createElement("video");
+      video.autoplay = true;
+      video.muted = true; // sicherheitshalber stumm
+      video.playsInline = true;
+      video.srcObject = localCameraStream;
+
+      avatar.appendChild(video);
+    }
+
+    // Name + Status
+    const main = document.createElement("div");
+    main.className = "player-tile-main";
+
     const name = document.createElement("div");
-    name.className = "player-cam-name";
+    name.className = "player-tile-name";
     name.textContent = p.nickname;
 
+    const status = document.createElement("div");
+    status.className = "player-tile-status";
+
+    if (state.correct === true) {
+      status.textContent = "Richtig";
+    } else if (state.correct === false) {
+      status.textContent = "Falsch";
+    } else if (state.answered) {
+      status.textContent = "Lock-in";
+    } else {
+      status.textContent = "Am Zug";
+    }
+
+    main.appendChild(name);
+    main.appendChild(status);
+
+    // Score
+    const score = document.createElement("div");
+    score.className = "player-tile-score";
+    score.textContent = p.score;
+
     // Zusammenbauen
-    tile.appendChild(video);
-    tile.appendChild(name);
+    tile.appendChild(avatar);
+    tile.appendChild(main);
+    tile.appendChild(score);
 
     playersStripInnerEl.appendChild(tile);
   });
