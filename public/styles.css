@@ -864,3 +864,41 @@ input:focus {
 .hidden {
   display: none !important;
 }
+
+/* --- FACE CAM STRIP --- */
+
+.players-strip-inner {
+  display: flex;
+  gap: 14px;
+  padding: 12px;
+  overflow-x: auto;
+}
+
+.player-cam {
+  width: 260px;
+  height: 150px;
+  background: #000;
+  border-radius: 14px;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.5);
+}
+
+.player-cam video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.player-cam-name {
+  position: absolute;
+  bottom: 6px;
+  left: 8px;
+  padding: 4px 10px;
+  background: rgba(0,0,0,0.55);
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
