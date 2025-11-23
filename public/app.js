@@ -507,38 +507,54 @@ function renderPlayerStrip(players) {
     }
     const state = playerStates[p.id];
 
-    // --- NEUER CAM TILE ---
-    const tile = document.createElement("div");
-    tile.className = "player-cam"; // ersetzt player-tile komplett
+    // Hauptkachel
+    const cam = document.createElement("div");
+    cam.className = "player-cam";
 
-    // Statusfarben wie vorher
-    if (p.id === socket.id) tile.classList.add("me");
-    if (state.correct === true) tile.classList.add("correct");
-    else if (state.correct === false) tile.classList.add("wrong");
-    else if (state.answered) tile.classList.add("answered");
-    else tile.classList.add("active");
+    // Rahmenfarben nach Reveal
+    if (state.correct === true) cam.classList.add("correct-frame");
+    else if (state.correct === false) cam.classList.add("wrong-frame");
 
-    // --- VIDEO BEREICH ---
+    // Video element
     const video = document.createElement("video");
     video.autoplay = true;
     video.playsInline = true;
     video.muted = true;
 
-    // Nur eigene Kamera anzeigen (andere bleiben schwarz)
+    // Nur eigene Kamera live
     if (p.id === socket.id && localCameraStream) {
       video.srcObject = localCameraStream;
     }
 
-    // --- NAME ---
+    // Status Icon (oben links wie im Screenshot)
+    const statusIcon = document.createElement("div");
+    statusIcon.className = "player-status-icon";
+
+    // Logik:
+    if (state.correct === true) {
+      statusIcon.textContent = "✔️"; // richtig
+      statusIcon.classList.add("status-correct");
+    } else if (state.correct === false) {
+      statusIcon.textContent = "❌"; // falsch
+      statusIcon.classList.add("status-wrong");
+    } else if (state.answered) {
+      statusIcon.textContent = "✓"; // gelber Haken
+      statusIcon.classList.add("status-answered");
+    } else {
+      statusIcon.textContent = "•"; // neutraler Punkt
+      statusIcon.classList.add("status-waiting");
+    }
+
+    // Name
     const name = document.createElement("div");
     name.className = "player-cam-name";
     name.textContent = p.nickname;
 
-    // Zusammenbauen
-    tile.appendChild(video);
-    tile.appendChild(name);
+    cam.appendChild(video);
+    cam.appendChild(statusIcon);
+    cam.appendChild(name);
 
-    playersStripInnerEl.appendChild(tile);
+    playersStripInnerEl.appendChild(cam);
   });
 }
 

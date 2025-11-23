@@ -902,3 +902,30 @@ input:focus {
   font-size: 0.82rem;
   font-weight: 500;
 }
+
+.player-status-icon {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  font-size: 1.2rem;
+  padding: 2px 6px;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.45);
+}
+
+/* vor Reveal */
+.status-waiting { color: #bbb; }
+.status-answered { color: #ffcc33; }
+
+/* Reveal */
+.status-correct { color: #5cff80; }
+.status-wrong { color: #ff4444; }
+
+/* Rahmenfarben */
+.player-cam.correct-frame {
+  box-shadow: 0 0 0 3px #3cf27a;
+}
+
+.player-cam.wrong-frame {
+  box-shadow: 0 0 0 3px #ff4444;
+}

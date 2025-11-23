@@ -177,47 +177,52 @@ io.on("connection", (socket) => {
 
   // Antwort einreichen
   socket.on("submitAnswer", ({ roomCode, answerIndex }) => {
-    const room = rooms[roomCode];
-    if (!room) return;
+  const room = rooms[roomCode];
+  if (!room) return;
 
-    const player = room.players[socket.id];
-    if (!player || player.answeredCurrent) return;
+  const player = room.players[socket.id];
+  if (!player || player.answeredCurrent) return;
 
-    const question = QUESTIONS[room.currentQuestionIndex];
-    const isCorrect = answerIndex === question.correctIndex;
+  const question = QUESTIONS[room.currentQuestionIndex];
+  const isCorrect = answerIndex === question.correctIndex;
 
-    // Punkte vergeben
-    if (isCorrect) player.score += 100;
+  // Spielerstatus setzen
+  player.answeredCurrent = true;
 
-    player.answeredCurrent = true;
+  // Antwort speichern (für Reveal)
+  room.answers.push({
+    playerId: socket.id,
+    nickname: player.nickname,
+    answerIndex,
+    correct: isCorrect
+  });
 
-    // Antwort speichern
-    if (!room.answers) room.answers = [];
-    room.answers.push({
-      playerId: socket.id,
-      nickname: player.nickname,
-      answerIndex,
-      correct: isCorrect
+  // In der Players-Strip UI anzeigen, wer geantwortet hat
+  io.to(roomCode).emit("playerAnswered", { playerId: socket.id });
+
+  // Prüfen, ob alle geantwortet haben
+  const allAnswered = Object.values(room.players).every(
+    (p) => p.answeredCurrent
+  );
+
+  if (allAnswered) {
+    // Punkte erst JETZT vergeben
+    room.answers.forEach(a => {
+      if (a.correct) {
+        room.players[a.playerId].score += 100;
+      }
     });
 
-    // für Spieler-Leiste: jemand hat geantwortet
-    io.to(roomCode).emit("playerAnswered", { playerId: socket.id });
-
-    // Score Update an alle
+    // Score senden
     io.to(roomCode).emit("scoreUpdate", getRoomPublicState(roomCode));
 
-    // Prüfen, ob alle geantwortet haben
-    const allAnswered = Object.values(room.players).every(
-      (p) => p.answeredCurrent
-    );
-
-    if (allAnswered) {
-      io.to(roomCode).emit("answerReveal", {
-        answers: room.answers,
-        correctIndex: question.correctIndex
-      });
-    }
-  });
+    // Reveal senden
+    io.to(roomCode).emit("answerReveal", {
+      answers: room.answers,
+      correctIndex: question.correctIndex
+    });
+  }
+});
 
   // Disconnect
   socket.on("disconnect", () => {
